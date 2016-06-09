@@ -1,0 +1,29 @@
+{
+  "name": "metadom",
+  "version": "0.0.0",
+  "description": "DOM-based cross-framework abstraction layer.  Because Web Components aren't ready yet.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jchadwick/metadom"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jchadwick/metadom/issues"
+  },
+  "homepage": "https://github.com/jchadwick/metadom",
+  "dependencies": {
+    "oclazyload": "^1.0.9",
+    "webcomponents-lite": "^0.6.0"
+  },
+  "jspm": {
+    "dependencies": {
+      "angular": "github:angular/bower-angular@^1.5.6",
+      "webcomponents-lite": "npm:webcomponents-lite@^0.6.0"
+    }
+  }
+}
