@@ -4,9 +4,23 @@ interface Todo {
     completed: boolean;
 }
 
+export let Todos: Todo[] = [
+    { id: 1, name: 'Pick up drycleaning', completed: false },
+    { id: 2, name: 'Save Gotham', completed: false },
+    { id: 3, name: 'Clean cave', completed: true },
+];
+
+let __id = 0;
+
 class TodosService {
 
     private _todos: Todo[] = [];
+
+    addTodo(todo: Todo): Promise<Todo> {
+        todo.id = __id += 1;
+        this._todos.push(todo);
+        return todo;
+    }
 
     getTodoById(id: number): Promise<Todo> {
         let matches = this._todos.filter(x => x.id == id),

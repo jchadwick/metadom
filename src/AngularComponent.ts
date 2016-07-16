@@ -3,48 +3,81 @@ import * as angular from 'angular'
 let AngularComponent = Object.create(HTMLElement.prototype);
 
 AngularComponent.attachedCallback = function() {
+    const module = this && this.module;
 
-    const element = this,
-          name = element && element.name;
+    if(!module) throw 'Component name missing'
 
-    if(!name) throw 'Component name missing'
+    angular.bootstrap(this, [module]);
 
-    angular.bootstrap(element, [this.name]);
+    let el = this,
+        events = this.events,
+        component = getComponent(this);
 
-    let $element = angular.element(element),
-        $scope = $element.scope(),
-        $injector = $element.injector();
-
-    $injector.invoke(["$compile", ($compile) => {
-        $compile(element.outerHTML)($scope);
-        console.log(`Initialized new AngularComponent ${name}`, element)
-    }])
+    for(let evt of events) {
+        component[evt] = el.dispatch.bind(this, evt);
+    }
 }
 
 AngularComponent.attributeChangedCallback = function(attrName, oldVal, newVal) {
 
-    const $element = angular.element(this),
-          controllerName = toProperty(this.name),
-          $scope = $element.scope(),
-          attrPropertyName = toProperty(attrName),
-          controller = $element.controller(controllerName),
-          $injector = $element.injector();
+    const component = getComponent(this),
+          $scope = angular.element(this).scope(),
+          attrPropertyName = toPropertyName(attrName);
 
-    if(!$scope && !controller) return;
+    if(component) component[attrPropertyName] = newVal;
 
-    $injector.invoke(["$timeout", ($timeout) => {
-        $timeout(() => {
-            $scope[attrPropertyName] = newVal;
-            if(controller) controller[attrPropertyName] = newVal;
-            
-            console.debug(`$scope[${attrPropertyName}] == ${$scope[attrPropertyName]}`)
-            if(controller) console.debug(`controller.${attrPropertyName} == ${controller[attrPropertyName]}`)
-        });
-    }]);
+    if($scope && !$scope.$root.$$phase) $scope.$apply();
 }
 
-function toProperty(attrName: string): string {
+AngularComponent.createdCallback = function() {
+
+    this.dispatch = function(eventName: string, args?: {}) {
+        var name = toAttributeName(eventName);
+        this.dispatchEvent(new CustomEvent(name, { detail: args }));
+    }
+    
+}
+
+AngularComponent.detatchedCallback = function() {
+    angular.element(this).scope().$rootScope.$destroy();
+    console.debug('Destroyed AngularComponent')
+}
+
+function getComponent(el: HTMLElement) {
+
+    const $element = angular.element(el),
+          $scope = $element.isolateScope(),
+          controllerName = toPropertyName(el.name),
+          controller = $element.controller(controllerName);
+
+    return controller || $scope;
+}
+
+function toAttributeName(attrName: string): string {
+    return attrName.replace(/([A-Z])/g, (match) => '-' + match.toLowerCase());
+}
+
+function toPropertyName(attrName: string): string {
     return attrName.replace(/-(.)/g, (match) => match.toUpperCase()[1]);
+}
+
+
+export function registerAngularWebComponent(module, directives: {name: string, events: string[] }[]) {
+
+    for(let directive of directives) {
+
+        let componentName = toAttributeName(directive.name),
+            events = [].concat(directive.events);
+
+        document.registerElement(componentName, { 
+            prototype: Object.create(AngularComponent, {
+                module: { value: module.name },
+                name: { value: componentName },
+                events: { value: events }
+            })
+        })
+    }
+
 }
 
 export default AngularComponent;

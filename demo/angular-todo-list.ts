@@ -1,17 +1,28 @@
 import * as angular from 'angular'
-import AngularComponent from '../src/AngularComponent' 
+import {registerAngularWebComponent} from '../src/AngularComponent' 
+import { Todos } from './todosService'
 
-const directive = angular.module('angular-todo-list', [])
+const module = angular.module('angular-todo-list', [])
     .component('angularTodoList', {
         bindings: {
             selectedTodoId: '<',
             onSelectedTodoChanged: '&'
         },
-        template: 'selectedTodoId = {{::$ctrl.selectedTodoId}}'
+        controller: function($element) {
+            this.$element = $element;
+            this.todos = Todos;
+        },
+        template: `
+            <ul>
+                <li ng-repeat="todo in $ctrl.todos" ng-click="$ctrl.onSelectedTodoChanged({ todoId: todo.id })">
+                    {{todo.id}} -
+                    {{todo.name}}
+                    <span ng-if="todo.id == $ctrl.selectedTodoId">(Selected)</span> 
+                </li>
+            </ul>
+        `
     })
 
-let AngularTodoList = Object.create(AngularComponent, {
-    name: { value: directive.name }
-});
-
-export default document.registerElement('angular-todo-list', { prototype: AngularTodoList })
+registerAngularWebComponent(module, [
+    { name: 'angularTodoList', events: ['onSelectedTodoChanged']}
+])
