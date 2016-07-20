@@ -23,6 +23,7 @@
   "jspm": {
     "dependencies": {
       "angular": "github:angular/bower-angular@^1.5.6",
+      "jquery": "npm:jquery@^3.1.0",
       "webcomponents-lite": "npm:webcomponents-lite@^0.6.0"
     }
   }

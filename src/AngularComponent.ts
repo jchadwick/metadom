@@ -1,6 +1,16 @@
+import MetadomComponent from './metadom'
 import * as angular from 'angular'
 
-let AngularComponent = Object.create(HTMLElement.prototype);
+export interface IAngularComponent extends HTMLElement {
+    module: string;
+    name: string;
+    events: string[];
+
+	webComponent(directive: IAngularComponent)
+	webComponent(directives: IAngularComponent[])
+}
+
+let AngularComponent = Object.create(MetadomComponent);
 
 AngularComponent.attachedCallback = function() {
     const module = this && this.module;
@@ -22,62 +32,53 @@ AngularComponent.attributeChangedCallback = function(attrName, oldVal, newVal) {
 
     const component = getComponent(this),
           $scope = angular.element(this).scope(),
-          attrPropertyName = toPropertyName(attrName);
+          attrPropertyName = MetadomComponent.toPropertyName(attrName);
 
     if(component) component[attrPropertyName] = newVal;
 
     if($scope && !$scope.$root.$$phase) $scope.$apply();
 }
 
-AngularComponent.createdCallback = function() {
-
-    this.dispatch = function(eventName: string, args?: {}) {
-        var name = toAttributeName(eventName);
-        this.dispatchEvent(new CustomEvent(name, { detail: args }));
-    }
-    
-}
-
 AngularComponent.detatchedCallback = function() {
     angular.element(this).scope().$rootScope.$destroy();
-    console.debug('Destroyed AngularComponent')
 }
 
-function getComponent(el: HTMLElement) {
+AngularComponent.webComponent = registerWebComponent;
+
+function registerWebComponent(directive: IAngularComponent)
+function registerWebComponent(directives: IAngularComponent[]) 
+function registerWebComponent(arg: any) {
+
+    let directives = [].concat(arg);
+
+    for(let directive of directives) {
+
+        let componentName = MetadomComponent.toAttributeName(directive.name),
+            events = [].concat(directive.events);
+
+        document.registerElement(componentName, { 
+            prototype: Object.create(AngularComponent, {
+                module: { value: directive.module },
+                name: { value: componentName },
+                events: { value: events }
+            })
+        })
+
+        console.debug(`Registered AngularComponent ${componentName}`)
+    }
+}
+
+
+function getComponent(el: IAngularComponent) {
 
     const $element = angular.element(el),
           $scope = $element.isolateScope(),
-          controllerName = toPropertyName(el.name),
+          controllerName = MetadomComponent.toPropertyName(el.name),
           controller = $element.controller(controllerName);
 
     return controller || $scope;
 }
 
-function toAttributeName(attrName: string): string {
-    return attrName.replace(/([A-Z])/g, (match) => '-' + match.toLowerCase());
-}
-
-function toPropertyName(attrName: string): string {
-    return attrName.replace(/-(.)/g, (match) => match.toUpperCase()[1]);
-}
 
 
-export function registerAngularWebComponent(module, directives: {name: string, events: string[] }[]) {
-
-    for(let directive of directives) {
-
-        let componentName = toAttributeName(directive.name),
-            events = [].concat(directive.events);
-
-        document.registerElement(componentName, { 
-            prototype: Object.create(AngularComponent, {
-                module: { value: module.name },
-                name: { value: componentName },
-                events: { value: events }
-            })
-        })
-    }
-
-}
-
-export default AngularComponent;
+export default <IAngularComponent>AngularComponent;

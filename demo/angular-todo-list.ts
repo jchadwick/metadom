@@ -1,5 +1,5 @@
 import * as angular from 'angular'
-import {registerAngularWebComponent} from '../src/AngularComponent' 
+import AngularComponent from '../src/AngularComponent' 
 import { Todos } from './todosService'
 
 const module = angular.module('angular-todo-list', [])
@@ -23,6 +23,6 @@ const module = angular.module('angular-todo-list', [])
         `
     })
 
-registerAngularWebComponent(module, [
-    { name: 'angularTodoList', events: ['onSelectedTodoChanged']}
-])
+AngularComponent.webComponent(
+    { module: module.name, name: 'angularTodoList', events: ['onSelectedTodoChanged']}
+)
