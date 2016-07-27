@@ -1,7 +1,6 @@
 import $ from 'jquery'
 import JQueryComponent from '../src/JQueryComponent'
 import {IAttributeChange} from '../src/metadom'
-import { Todos } from './todosService'
 
 function renderTodo(todo, selected) {
     if(!todo) return null;
@@ -17,9 +16,10 @@ function renderTodo(todo, selected) {
 
 function render(el: HTMLElement) {
     let $el = $(el),
-        selectedTodoId = $(el).attr('selected-todo-id');
+        selectedTodoId = $(el).attr('selected-todo-id'),
+        todos = el.todos || [];
 
-    let todoEls = Todos.filter(x => !!x).map(todo => 
+    let todoEls = todos.filter(x => !!x).map(todo => 
         renderTodo(todo, todo.id == selectedTodoId)
     );
 
@@ -33,11 +33,12 @@ function render(el: HTMLElement) {
 function onChange(el: HTMLElement, change?: IAttributeChange) {
 
     if(change.attr == 'selected-todo-id') {
-        let oldTodo = Todos.find(x => x.id == change.oldValue),
-            newTodo = Todos.find(x => x.id == change.newValue);
+        render(el)
+    }
 
-        $(el).find(`[todo-id=${change.oldValue}]`).replaceWith(renderTodo(oldTodo, false))
-        $(el).find(`[todo-id=${change.newValue}]`).replaceWith(renderTodo(newTodo, true))
+    if(change.attr == 'todos') {
+        el.todos = change.newValue;
+        render(el)
     }
 
 }

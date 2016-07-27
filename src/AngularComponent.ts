@@ -34,7 +34,13 @@ AngularComponent.attributeChangedCallback = function(attrName, oldVal, newVal) {
           $scope = angular.element(this).scope(),
           attrPropertyName = MetadomComponent.toPropertyName(attrName);
 
-    if(component) component[attrPropertyName] = newVal;
+    if(component) {
+        if(attrName === MetadomComponent.DATA_PROPERTY) {
+            angular.extend(component, newVal);
+        } else {
+            component[attrPropertyName] = newVal;
+        }
+    }
 
     if($scope && !$scope.$root.$$phase) $scope.$apply();
 }

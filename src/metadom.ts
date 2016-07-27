@@ -6,7 +6,13 @@ export interface IAttributeChange {
     newValue: string;
 }
 
-let MetadomComponent = Object.create(HTMLElement.prototype);
+export interface IMetadomComponent extends HTMLElement {
+    setData(data): void;
+}
+
+export let MetadomComponent = Object.create(HTMLElement.prototype);
+
+MetadomComponent.DATA_PROPERTY = 'data';
 
 MetadomComponent.createdCallback = function() {
 
@@ -24,5 +30,15 @@ MetadomComponent.toAttributeName = function(attrName: string): string {
 MetadomComponent.toPropertyName = function(attrName: string): string {
     return attrName.replace(/-(.)/g, (match) => match.toUpperCase()[1]);
 }
+
+MetadomComponent.setData = function(data) {
+    let oldValue = this.data,
+        newValue = data;
+
+    this.data = newValue;
+
+    this.attributeChangedCallback(MetadomComponent.DATA_PROPERTY, oldValue, newValue);
+}
+
 
 export default MetadomComponent;

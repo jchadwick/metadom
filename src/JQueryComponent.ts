@@ -13,6 +13,13 @@ JQueryComponent.attachedCallback = function() {
 }
 
 JQueryComponent.attributeChangedCallback = function(attrName, oldValue, newValue) {
+    
+    if(attrName === MetadomComponent.DATA_PROPERTY) {
+        for(let prop in newValue) {
+            this.attributeChangedCallback(prop, null, newValue[prop]);
+        }    
+    }
+
     $(this).each(x => this.plugin({ attr: attrName, oldValue: oldValue, newValue: newValue }));
 }
 
