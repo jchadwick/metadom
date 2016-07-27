@@ -1,4 +1,4 @@
-import {MetadomComponent, IMetadomComponent} from '/src/metadom'
+import * as metadom from '/src/metadom'
 import './angular-todo-list'
 import './jquery-todo-list' 
 
@@ -9,10 +9,16 @@ export default class App {
     private selectedTodoId = 0;
     private todos = [];
 
-    private angularTodoList: IMetadomComponent;
-    private jqueryTodoList: IMetadomComponent;
+    private angularTodoList: metadom.IMetadomComponent;
+    private jqueryTodoList: metadom.IMetadomComponent;
+
+    constructor(private el: HTMLElement) {
+    }
     
-    constructor(el: HTMLElement) {
+    render() {
+
+        let el = this.el;
+        
         el.innerHTML = `
             <div class="container">
                 <h1>Cross-Framework Component Demo</h1>
@@ -36,6 +42,7 @@ export default class App {
                 </div>
             </div>
         `
+
         this.angularTodoList = el.getElementsByTagName('angular-todo-list')[0]
         this.jqueryTodoList = el.getElementsByTagName('jquery-todo-list')[0]
 
@@ -50,6 +57,8 @@ export default class App {
 
             evt.preventDefault();
         })
+
+        this.sync();
     }
 
     addTodo(name: string, completed?: boolean) {
@@ -66,6 +75,12 @@ export default class App {
         this.sync();
     }
 
+    setData(data) {
+        this.todos = data.todos;
+        this.selectedTodoId = data.todoId;
+        this.sync();
+    }
+
     sync() {
         this.angularTodoList.setData({ todos: this.todos });
         this.angularTodoList.setAttribute('selected-todo-id', this.selectedTodoId.toString())
@@ -74,3 +89,5 @@ export default class App {
     }
 
 }
+
+metadom.VanillaComponent('xApp', App)

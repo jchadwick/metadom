@@ -1,4 +1,4 @@
-import MetadomComponent, {IAttributeChange} from './metadom'
+import * as metadom from './metadom'
 import $ from 'jquery'
 
 export interface IJQueryComponent extends HTMLElement {
@@ -6,26 +6,31 @@ export interface IJQueryComponent extends HTMLElement {
     webComponent: (name: string, plugin: (IAttributeChange) => void) => void;
 }
 
-let JQueryComponent = Object.create(MetadomComponent);
+let JQueryComponent = Object.create(metadom.MetadomComponent);
 
 JQueryComponent.attachedCallback = function() {
     $(this).each(this.plugin);
 }
 
 JQueryComponent.attributeChangedCallback = function(attrName, oldValue, newValue) {
-    
-    if(attrName === MetadomComponent.DATA_PROPERTY) {
-        for(let prop in newValue) {
-            this.attributeChangedCallback(prop, null, newValue[prop]);
-        }    
-    }
-
     $(this).each(x => this.plugin({ attr: attrName, oldValue: oldValue, newValue: newValue }));
+}
+
+JQueryComponent.createdCallback = function() {
+
+    metadom.MetadomComponent.createdCallback();
+
+    this.setData = (function(data) {
+        for(let prop in data) {
+            this.attributeChangedCallback(prop, null, data[prop]);
+        }    
+    }).bind(this)
+
 }
 
 JQueryComponent.webComponent = function(name: string, plugin: (IAttributeChange) => void) {
 
-    const componentName = MetadomComponent.toAttributeName(name);
+    const componentName = metadom.toAttributeName(name);
 
     document.registerElement(componentName, { 
         prototype: Object.create(JQueryComponent, {

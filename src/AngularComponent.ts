@@ -1,4 +1,4 @@
-import MetadomComponent from './metadom'
+import * as metadom from './metadom'
 import * as angular from 'angular'
 
 export interface IAngularComponent extends HTMLElement {
@@ -10,7 +10,19 @@ export interface IAngularComponent extends HTMLElement {
 	webComponent(directives: IAngularComponent[])
 }
 
-let AngularComponent = Object.create(MetadomComponent);
+let AngularComponent = Object.create(metadom.MetadomComponent);
+
+AngularComponent.createdCallback = function() {
+
+    metadom.MetadomComponent.createdCallback();
+
+    this.setData = (function(data) {
+        let component = getComponent(this);
+        angular.extend(component, data);
+        sync(this);
+    }).bind(this)
+
+}
 
 AngularComponent.attachedCallback = function() {
     const module = this && this.module;
@@ -31,18 +43,11 @@ AngularComponent.attachedCallback = function() {
 AngularComponent.attributeChangedCallback = function(attrName, oldVal, newVal) {
 
     const component = getComponent(this),
-          $scope = angular.element(this).scope(),
-          attrPropertyName = MetadomComponent.toPropertyName(attrName);
+          attrPropertyName = metadom.toPropertyName(attrName);
 
-    if(component) {
-        if(attrName === MetadomComponent.DATA_PROPERTY) {
-            angular.extend(component, newVal);
-        } else {
-            component[attrPropertyName] = newVal;
-        }
-    }
+    if(component) component[attrPropertyName] = newVal;
 
-    if($scope && !$scope.$root.$$phase) $scope.$apply();
+    sync(this);
 }
 
 AngularComponent.detatchedCallback = function() {
@@ -59,7 +64,7 @@ function registerWebComponent(arg: any) {
 
     for(let directive of directives) {
 
-        let componentName = MetadomComponent.toAttributeName(directive.name),
+        let componentName = metadom.toAttributeName(directive.name),
             events = [].concat(directive.events);
 
         document.registerElement(componentName, { 
@@ -74,12 +79,16 @@ function registerWebComponent(arg: any) {
     }
 }
 
+function sync(el: HTMLElement) {
+    let $scope = angular.element(el).scope()
+    if($scope && !$scope.$root.$$phase) $scope.$apply();
+}
 
 function getComponent(el: IAngularComponent) {
 
     const $element = angular.element(el),
           $scope = $element.isolateScope(),
-          controllerName = MetadomComponent.toPropertyName(el.name),
+          controllerName = metadom.toPropertyName(el.name),
           controller = $element.controller(controllerName);
 
     return controller || $scope;

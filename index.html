@@ -4,24 +4,21 @@
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
 </head>
 <body>
+    <x-app></x-app>
     <script type="text/javascript" src="jspm_packages/system.js"></script>
     <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript">
-        System.import('components/app').then(function(m) {
     
-            console.info('Loading application...')
+        let appEl = document.getElementsByTagName('x-app')[0];
 
-            let appEl = document.createElement('div');
-
-            document.body.appendChild(appEl)
-
-            let App = m.default,
-                app = new App(appEl);
-
-            app.addTodo('Pick up drycleaning');
-            app.addTodo('Clean Batcave');
-            app.addTodo('Save Gotham');
-            app.setSelectedTodoId(1)
+        System.import('components/app').then(function(appModule) {
+            System.import('src/metadom').then(function(metadom) {
+                let app = metadom.getComponent(appEl, appModule.default);
+                app.addTodo('Pick up drycleaning')
+                app.addTodo('Clean cave', true)
+                app.addTodo('Save Gotham')
+                app.setSelectedTodoId('1')
+            })
         })
     </script>
 </body>
